@@ -1,19 +1,34 @@
-# Salaam Japan - Cloudflare Pages
+# Salaam Japan V6 - Cloud OCR
 
-This is a static web prototype. Japanese OCR is still experimental and must not be used as a definitive halal verdict.
+## What changed
+- OCR runs server-side through Google Cloud Vision `DOCUMENT_TEXT_DETECTION` with Japanese language hint.
+- Japanese text is translated to Indonesian with Cloud Translation Basic v2.
+- The browser never receives the Google API key.
+- The same API works on laptop, Android, and iPhone.
 
-## Cloudflare Pages GitHub deployment
-1. Create a new GitHub repository (e.g. `salaam-japan`).
-2. Upload `index.html` at the repository root.
-3. In Cloudflare dashboard, Workers & Pages > Create > Pages > Connect to Git.
-4. Authorize the repository and select it.
-5. Set production branch to `main`, framework preset to None, build command empty, output directory `/` (repository root).
-6. Deploy and open the generated `.pages.dev` URL.
-7. Subsequent commits to `main` deploy automatically.
+## Google Cloud setup
+1. Create/select a Google Cloud project and attach billing.
+2. Enable **Cloud Vision API** and **Cloud Translation API**.
+3. Create an API key in APIs & Services > Credentials.
+4. Restrict the key to only those two APIs. Do not commit the key to GitHub.
 
-Do not choose Direct Upload if you want built-in Git integration for this project.
+## Cloudflare secret
+In Cloudflare Dashboard: Workers & Pages > `salaam-japan` > Settings > Variables and Secrets > Add.
+- Type: Secret
+- Name: `GOOGLE_API_KEY`
+- Value: your Google API key
 
-## Safety
-- Never store Cloudflare API tokens or OCR service keys in frontend JavaScript.
-- Future cloud OCR should use a server-side Cloudflare Worker or Pages Function.
-- OCR errors must block automatic halal judgments.
+Or with Wrangler:
+```bash
+npx wrangler secret put GOOGLE_API_KEY
+```
+
+## Deploy via GitHub
+Replace the repository contents with this package and commit to `main`. If the Worker is connected to GitHub, Cloudflare builds automatically.
+
+Build settings:
+- Build command: `npm run deploy` only when using Workers Builds as configured by Cloudflare; otherwise use the existing Workers Git deployment defaults.
+- Deploy command: `npx wrangler deploy`
+
+## Test
+Use a Japanese label showing `原材料名：牛乳100%`. Expected translation: roughly `Komposisi: 100% susu sapi`, with a yellow result because absence of risky keywords is not halal certification.
